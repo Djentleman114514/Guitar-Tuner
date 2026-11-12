@@ -24,6 +24,20 @@ class TunerScreenTest {
         compose.onNodeWithText("等待识别频率").performScrollTo().assertIsDisplayed()
     }
 
+    @Test fun dropASelectionDistinguishesOctavesAndClearsUnavailableSeventhString() {
+        compose.onNodeWithTag("tuning_DROP_A_SEVEN").performScrollTo().performClick()
+        compose.onNodeWithTag("string_7").performScrollTo().performClick()
+        compose.onNodeWithText("目标 55.00 Hz").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("string_5").performScrollTo().performClick()
+        compose.onNodeWithText("目标 110.00 Hz").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("string_7").performScrollTo().performClick()
+        compose.onNodeWithTag("tuning_STANDARD_SIX").performScrollTo().performClick()
+        compose.onNodeWithTag("string_7").assertDoesNotExist()
+        compose.onNodeWithText("目标 82.41 Hz").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("mode_auto").performScrollTo().performClick()
+        compose.onNodeWithText("等待识别频率").performScrollTo().assertIsDisplayed()
+    }
+
     @Test fun helpExplainsLocalAudioProcessing() {
         compose.onNodeWithTag("help").performClick()
         compose.onNodeWithText("让每根弦，回到音准").assertIsDisplayed()
@@ -38,6 +52,9 @@ class TunerScreenTest {
         compose.onNodeWithTag("listen_toggle").performClick()
         compose.waitUntil(5_000) { audio.activeRecordingConfigurations.isNotEmpty() }
         compose.onNodeWithText("暂停聆听").assertIsDisplayed()
+        compose.onNodeWithTag("tuning_DROP_A_SEVEN").performScrollTo().performClick()
+        compose.onNodeWithTag("string_7").performScrollTo().performClick()
+        compose.onNodeWithText("目标 55.00 Hz").performScrollTo().assertIsDisplayed()
         compose.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
         compose.waitUntil(5_000) { audio.activeRecordingConfigurations.isEmpty() }
         compose.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)

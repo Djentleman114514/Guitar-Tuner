@@ -5,6 +5,22 @@ import org.junit.Test
 import kotlin.math.pow
 
 class TuningEngineTest {
+    @Test fun `drop A distinguishes seventh A1 from fifth A2 and second B3`() {
+        val tuning = GuitarTuning.DROP_A_SEVEN
+        for (string in tuning.strings) {
+            val engine = TuningEngine(tuning.strings)
+            val reading = engine.process(pitch(string.frequency), null, 0).reading!!
+            assertEquals(string, reading.target)
+            assertEquals(0.0, reading.cents, 1e-8)
+        }
+        val seventh = tuning.strings.first()
+        val manual = TuningEngine(tuning.strings).process(pitch(110.0), seventh, 0).reading!!
+        assertEquals(7, manual.target.number)
+        assertEquals(1200.0, manual.cents, 1e-8)
+        assertFalse(manual.inTune)
+        assertEquals(6, TuningEngine().process(pitch(55.0), null, 0).reading!!.target.number)
+    }
+
     private val lowE = GuitarString.standard.first()
     private fun pitch(frequency: Double) = PitchAnalysis(frequency, 0.99, 0.1, false)
 

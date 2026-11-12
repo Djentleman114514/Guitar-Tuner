@@ -17,7 +17,7 @@ data class PitchAnalysis(
 /** Single-note YIN estimator. Instances are confined to one analysis coroutine. */
 class YinPitchDetector(
     private val sampleRate: Int,
-    private val minFrequency: Double = 65.0,
+    private val minFrequency: Double = 45.0,
     private val maxFrequency: Double = 450.0,
 ) {
     private var difference = DoubleArray(0)
@@ -102,8 +102,12 @@ class YinPitchDetector(
             val original = chosen
             for (multiple in 2..3) {
                 val center = original * multiple
-                if (center + 2 >= maxLag) break
-                val candidate = (center - 2..center + 2).minBy { difference[it] }
+                if (center >= maxLag) break
+                // A weak fundamental shifts the early harmonic dip. At low notes
+                // a fixed two-sample search misses the true doubled-period minimum.
+                val radius = max(2, original / 50)
+                val candidate = (max(1, center - radius)..min(maxLag - 1, center + radius))
+                    .minBy { difference[it] }
                 if (difference[candidate] < difference[chosen] * 0.2 &&
                     difference[chosen] - difference[candidate] > 0.02
                 ) chosen = candidate

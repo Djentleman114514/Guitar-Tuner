@@ -15,10 +15,15 @@ data class GuitarString(val number: Int, val note: String, val octave: Int, val 
             GuitarString(1, "E", 4, 329.6275569129),
         )
 
-        fun closest(frequency: Double): GuitarString = standard.minBy {
+        fun closest(frequency: Double, strings: List<GuitarString> = standard): GuitarString = strings.minBy {
             abs(centsBetween(frequency, it.frequency))
         }
     }
+}
+
+enum class GuitarTuning(val title: String, val strings: List<GuitarString>) {
+    STANDARD_SIX("标准六弦", GuitarString.standard),
+    DROP_A_SEVEN("七弦 Drop A", listOf(GuitarString(7, "A", 1, 55.0)) + GuitarString.standard),
 }
 
 fun centsBetween(frequency: Double, target: Double): Double = 1200.0 * ln(frequency / target) / ln(2.0)

@@ -14,7 +14,7 @@ data class TuningReading(
 data class TuningResult(val reading: TuningReading?, val signal: SignalState, val level: Double)
 
 /** Pure state machine: callers supply a monotonic time, enabling deterministic tests. */
-class TuningEngine {
+class TuningEngine(private val strings: List<GuitarString> = GuitarString.standard) {
     private val frequencies = ArrayDeque<Double>()
     private var target: GuitarString? = null
     private var candidate: GuitarString? = null
@@ -68,7 +68,7 @@ class TuningEngine {
         frequencies.addLast(frequency)
         if (frequencies.size > 3) frequencies.removeFirst()
         val smoothed = frequencies.sorted()[frequencies.size / 2]
-        val closest = manualTarget ?: GuitarString.closest(smoothed)
+        val closest = manualTarget ?: GuitarString.closest(smoothed, strings)
         val current = target
 
         if (manualTarget != null || current == null) {

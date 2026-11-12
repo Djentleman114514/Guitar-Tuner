@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xianzhun.tuner.TunerUiState
 import com.xianzhun.tuner.core.GuitarString
+import com.xianzhun.tuner.core.GuitarTuning
 import com.xianzhun.tuner.core.SignalState
 import java.util.Locale
 import kotlin.math.PI
@@ -65,6 +66,7 @@ fun TunerScreen(
     state: TunerUiState,
     onAutoChanged: (Boolean) -> Unit,
     onStringSelected: (GuitarString) -> Unit,
+    onTuningSelected: (GuitarTuning) -> Unit,
     onToggleListening: () -> Unit,
 ) {
     var showHelp by rememberSaveable { mutableStateOf(false) }
@@ -88,10 +90,17 @@ fun TunerScreen(
                     }
                 }
 
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    GuitarTuning.entries.forEach { tuning ->
+                        ModeChip(tuning.title, state.tuning == tuning,
+                            Modifier.testTag("tuning_${tuning.name}")) { onTuningSelected(tuning) }
+                    }
+                }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("标准六弦", color = Cream, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                        Text("E A D G B E  ·  A4 = 440 Hz", color = Muted, fontSize = 11.sp)
+                        Text(state.tuning.strings.joinToString(" ") { it.note }, color = Cream,
+                            fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        Text("A4 = 440 Hz", color = Muted, fontSize = 11.sp)
                     }
                     Row(
                         Modifier.clip(RoundedCornerShape(14.dp)).background(Panel).padding(4.dp),
@@ -164,7 +173,7 @@ fun TunerScreen(
                         Text("粗弦 → 细弦", color = Muted, fontSize = 11.sp)
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        GuitarString.standard.forEach { string ->
+                        state.tuning.strings.forEach { string ->
                             val active = selected == string
                             Column(
                                 Modifier.weight(1f).testTag("string_${string.number}")
@@ -222,11 +231,11 @@ fun TunerScreen(
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text("1. 点击开始，允许麦克风。把手机放在吉他附近，一次拨响一根空弦。")
-                Text("2. 自动模式会选择最接近的标准弦；如果识别不对，点击下方琴弦，固定目标。六弦最粗，一弦最细。")
+                Text("2. 先选择标准六弦或七弦 Drop A。自动模式会匹配所选定弦；如果识别不对，点击下方琴弦固定目标。一弦最细。")
                 Text("3. 按提示升高或降低音高。指针居中并稳定后，会显示“音准刚刚好”。")
                 Text("建议在安静环境使用。没有声音时，请检查系统麦克风开关。切到后台或锁屏会停止采音，返回时恢复。")
-                Text("本版使用标准定弦，A4 = 440 Hz。音分是音高偏差，100 音分等于一个半音。")
-                Text("弦准 0.1.1 · 内测版\n声音只在本机内存处理，不保存、不上传。", color = Muted, fontSize = 12.sp)
+                Text("七弦 Drop A 的第七弦为 A1（55 Hz），其余六弦保持标准定弦。A4 = 440 Hz。100 音分等于一个半音。")
+                Text("弦准 0.2.0 · 内测版\n声音只在本机内存处理，不保存、不上传。", color = Muted, fontSize = 12.sp)
             }
         },
         confirmButton = { TextButton(onClick = { showHelp = false }) { Text("知道了") } },

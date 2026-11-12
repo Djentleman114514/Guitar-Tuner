@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
                     state = state,
                     onAutoChanged = tuner::setAuto,
                     onStringSelected = tuner::selectString,
+                    onTuningSelected = tuner::selectTuning,
                     onToggleListening = {
                         when {
                             state.isListening -> tuner.pause()

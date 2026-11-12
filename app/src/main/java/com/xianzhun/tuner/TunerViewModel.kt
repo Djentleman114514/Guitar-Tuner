@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.xianzhun.tuner.audio.AndroidAudioInput
 import com.xianzhun.tuner.core.GuitarString
+import com.xianzhun.tuner.core.GuitarTuning
 import com.xianzhun.tuner.core.SignalState
 import com.xianzhun.tuner.core.TuningEngine
 import com.xianzhun.tuner.core.TuningReading
@@ -23,6 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 data class TunerUiState(
+    val tuning: GuitarTuning = GuitarTuning.STANDARD_SIX,
     val isListening: Boolean = false,
     val isAuto: Boolean = true,
     val manualString: GuitarString = GuitarString.standard.first(),
@@ -48,10 +50,10 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         recordingJob = viewModelScope.launch(Dispatchers.Default) {
             // A canceled reader must release its microphone before a replacement opens it.
             recordingMutex.withLock {
-                val engine = TuningEngine()
+                var engine = TuningEngine()
                 var detector: YinPitchDetector? = null
                 var currentRate = 0
-                var previousMode: Pair<Boolean, Int>? = null
+                var previousMode: Triple<GuitarTuning, Boolean, Int>? = null
                 try {
                     input.frames().collect { frame ->
                         if (currentRate != frame.sampleRate) {
@@ -59,9 +61,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                             detector = YinPitchDetector(currentRate)
                         }
                         val before = mutableState.value
-                        val mode = before.isAuto to before.manualString.number
+                        val mode = Triple(before.tuning, before.isAuto, before.manualString.number)
                         if (mode != previousMode) {
-                            engine.reset()
+                            engine = TuningEngine(before.tuning.strings)
                             previousMode = mode
                         }
                         val analysis = checkNotNull(detector).analyze(frame.samples)
@@ -70,7 +72,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                             SystemClock.elapsedRealtime(),
                         )
                         mutableState.update {
-                            if (it.isListening && (it.isAuto to it.manualString.number) == mode) {
+                            if (it.isListening && Triple(it.tuning, it.isAuto, it.manualString.number) == mode) {
                                 it.copy(reading = result.reading, signal = result.signal, level = result.level)
                             } else it
                         }
@@ -133,7 +135,19 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectString(string: GuitarString) {
         mutableState.update {
-            it.copy(isAuto = false, manualString = string, reading = null, signal = SignalState.WAITING)
+            if (string !in it.tuning.strings) it else
+                it.copy(isAuto = false, manualString = string, reading = null, signal = SignalState.WAITING)
+        }
+    }
+
+    fun selectTuning(tuning: GuitarTuning) {
+        mutableState.update {
+            if (it.tuning == tuning) it else it.copy(
+                tuning = tuning,
+                manualString = it.manualString.takeIf { string -> string in tuning.strings }
+                    ?: tuning.strings.first(),
+                reading = null, signal = SignalState.WAITING,
+            )
         }
     }
 }

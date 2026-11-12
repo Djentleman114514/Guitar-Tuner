@@ -12,7 +12,7 @@ import kotlin.math.sin
 class YinPitchDetectorTest {
     @Test fun `quiet guitar with broadband microphone noise remains detectable`() {
         for (rate in listOf(44_100, 48_000)) {
-            for (string in GuitarString.standard) {
+            for (string in GuitarTuning.DROP_A_SEVEN.strings) {
                 val random = Random(123)
                 val samples = FloatArray(4096) { i ->
                     val t = i.toDouble() / rate
@@ -33,7 +33,7 @@ class YinPitchDetectorTest {
         val errors = mutableListOf<Double>()
         for (rate in listOf(44_100, 48_000)) {
             val detector = YinPitchDetector(rate)
-            for (string in GuitarString.standard) {
+            for (string in GuitarTuning.DROP_A_SEVEN.strings) {
                 for (cents in listOf(-50.0, -20.0, -5.0, 0.0, 5.0, 20.0, 50.0)) {
                     val frequency = string.frequency * 2.0.pow(cents / 1200)
                     for (phase in listOf(0.0, 0.7, 2.0)) {
@@ -54,7 +54,7 @@ class YinPitchDetectorTest {
         val errors = mutableListOf<Double>()
         for (rate in listOf(44_100, 48_000)) {
             val detector = YinPitchDetector(rate)
-            for (string in GuitarString.standard) {
+            for (string in GuitarTuning.DROP_A_SEVEN.strings) {
                 val random = Random(42)
                 val samples = FloatArray(4096) { index ->
                     val t = index.toDouble() / rate
@@ -74,7 +74,7 @@ class YinPitchDetectorTest {
 
     @Test fun `weak fundamental does not get replaced by second harmonic`() {
         val detector = YinPitchDetector(48_000)
-        for (string in GuitarString.standard) {
+        for (string in GuitarTuning.DROP_A_SEVEN.strings) {
             val result = detector.analyze(FloatArray(4096) { i ->
                 val phase = 2 * PI * string.frequency * i / 48_000
                 (0.08 * sin(phase) + 0.55 * sin(2 * phase)).toFloat()
