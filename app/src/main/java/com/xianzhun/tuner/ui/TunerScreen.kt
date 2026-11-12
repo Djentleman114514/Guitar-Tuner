@@ -138,7 +138,7 @@ fun TunerScreen(
                         state.error != null -> "需要检查麦克风"
                         !state.isListening -> "点击下方，开始调音"
                         state.signal == SignalState.CLIPPED -> "声音过大，稍远一点"
-                        state.signal == SignalState.UNSTABLE -> "请一次只拨一根弦"
+                        state.signal == SignalState.UNSTABLE -> "尚未识别音高，请再拨弦"
                         state.signal == SignalState.TOO_QUIET -> "等待拨弦"
                         state.reading?.inTune == true -> "音准刚刚好"
                         state.reading == null -> "等待拨弦"
@@ -226,7 +226,7 @@ fun TunerScreen(
                 Text("3. 按提示升高或降低音高。指针居中并稳定后，会显示“音准刚刚好”。")
                 Text("建议在安静环境使用。没有声音时，请检查系统麦克风开关。切到后台或锁屏会停止采音，返回时恢复。")
                 Text("本版使用标准定弦，A4 = 440 Hz。音分是音高偏差，100 音分等于一个半音。")
-                Text("弦准 0.1.0 · 内测版\n声音只在本机内存处理，不保存、不上传。", color = Muted, fontSize = 12.sp)
+                Text("弦准 0.1.1 · 内测版\n声音只在本机内存处理，不保存、不上传。", color = Muted, fontSize = 12.sp)
             }
         },
         confirmButton = { TextButton(onClick = { showHelp = false }) { Text("知道了") } },

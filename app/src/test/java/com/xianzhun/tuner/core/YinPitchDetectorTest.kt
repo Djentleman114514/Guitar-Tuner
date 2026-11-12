@@ -10,6 +10,25 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 class YinPitchDetectorTest {
+    @Test fun `quiet guitar with broadband microphone noise remains detectable`() {
+        for (rate in listOf(44_100, 48_000)) {
+            for (string in GuitarString.standard) {
+                val random = Random(123)
+                val samples = FloatArray(4096) { i ->
+                    val t = i.toDouble() / rate
+                    val p = 2 * PI * string.frequency * t
+                    ((0.06 * sin(p) + 0.04 * sin(2 * p) + 0.02 * sin(3 * p)) *
+                        exp(-3 * t) + random.nextGaussian() * 0.035).toFloat()
+                }
+                val result = YinPitchDetector(rate).analyze(samples)
+                assertNotNull("${string.fullNote} at $rate", result.frequency)
+                assertTrue("${string.fullNote}: ${result.frequency}",
+                    abs(centsBetween(result.frequency!!, string.frequency)) < 5.0)
+                assertEquals(SignalState.VALID, TuningEngine().process(result, null, 0).signal)
+            }
+        }
+    }
+
     @Test fun `all strings and detunings stay within one cent at both sample rates`() {
         val errors = mutableListOf<Double>()
         for (rate in listOf(44_100, 48_000)) {
@@ -70,8 +89,15 @@ class YinPitchDetectorTest {
         val detector = YinPitchDetector(48_000)
         assertNull(detector.analyze(FloatArray(4096)).frequency)
         assertNull(detector.analyze(FloatArray(4096) { 0.4f }).frequency)
-        val random = Random(7)
-        assertNull(detector.analyze(FloatArray(4096) { (random.nextGaussian() * 0.1).toFloat() }).frequency)
+        for (rate in listOf(44_100, 48_000)) {
+            for (seed in 0L until 32L) {
+                val random = Random(seed)
+                assertNull("Noise seed $seed at $rate",
+                    YinPitchDetector(rate).analyze(
+                        FloatArray(4096) { (random.nextGaussian() * 0.1).toFloat() },
+                    ).frequency)
+            }
+        }
     }
 
     @Test fun `clipping is exposed and low level is rejected`() {
